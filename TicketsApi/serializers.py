@@ -52,14 +52,11 @@ class BookingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Booking
-        fields = '__all__'
+        fields = ('id', 'total_amount', 'quantity', 'details', 'show')
 
-# class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
-#     @classmethod
-#     def get_token(cls, user):
-#         token = super(MyTokenObtainPairSerializer, cls).get_token(user)
 
-#         # Add custom claims
-#         token['username'] = user.username
-#         return token
+class TestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ('id', 'total_amount', 'quantity', 'details', 'show')

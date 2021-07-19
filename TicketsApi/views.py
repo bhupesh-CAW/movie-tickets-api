@@ -1,7 +1,7 @@
 
 from rest_framework import generics, status
 from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
-from .serializers import MovieSerializer, CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
+from .serializers import MovieSerializer, TestSerializer,CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
 from rest_framework.views import APIView
 from django.http import Http404
 from rest_framework.response import Response
@@ -99,8 +99,8 @@ class PersonalDetailsView(APIView):
         serializer = PersonalDetailsSerializer(data=recieved_data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Class BookingView(APIView)
 
@@ -132,7 +132,7 @@ class GetCinemasQuery(APIView):
         get_movie = request.query_params.get('search_movie', None)
         if get_movie is not None:
             queryset = queryset.filter(
-                showtimes__movie__movie_name=get_movie)
+                showtimes__movie__movie_name__icontains=get_movie).distinct()
         serializer = CinemaShowsSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -161,12 +161,9 @@ class BookingTicketsQuery(APIView):
         showtime.booked_seats += recieve_data['quantity']
         showtime.save()
 
-        serializer = BookingSerializer(data=recieve_data)
+        serializer = TestSerializer(data=recieve_data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            booking_obj = serializer.save()
+            # serializer.save()
+            return Response(BookingSerializer.booking_obj.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# class MyObtainTokenPairView(TokenObtainPairView):
-#     serializer_class = MyTokenObtainPairSerializer

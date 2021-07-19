@@ -25,7 +25,8 @@ class Cinema(models.Model):
 
 
 class ShowTime(models.Model):
-    cinema = models.ForeignKey(Cinema, on_delete=models.CASCADE)
+    cinema = models.ForeignKey(
+        Cinema, related_name='showtimes', on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     booked_seats = models.IntegerField(null=False)
     show_start_time = models.DateTimeField(auto_now_add=True)
@@ -34,7 +35,7 @@ class ShowTime(models.Model):
     total_price = models.FloatField(null=False)
 
     def __str__(self) -> str:
-        return self.total_price
+        return str(self.id)
 
 
 class PersonalDetails(models.Model):
@@ -48,7 +49,7 @@ class PersonalDetails(models.Model):
 class Booking(models.Model):
     details = models.ForeignKey(PersonalDetails, on_delete=models.CASCADE)
     quantity = models.IntegerField(null=False)
-    total_amount = models.IntegerField(null=False)
+    total_amount = models.IntegerField()
     show = models.ForeignKey(ShowTime, on_delete=models.CASCADE)
 
     def __str__(self) -> str:
