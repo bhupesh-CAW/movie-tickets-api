@@ -46,17 +46,20 @@ class CinemaShowsSerializer(serializers.ModelSerializer):
                   'cinema_city', 'showtimes')
 
 
+
+
 class BookingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Booking
+        fields = ('id', 'total_amount', 'quantity', 'details', 'show')
+
+
+class BookingDetailSerializer(serializers.ModelSerializer):
     show = ShowMovieSerializer()
     details = PersonalDetailsSerializer()
 
+
     class Meta:
         model = Booking
         fields = ('id', 'total_amount', 'quantity', 'details', 'show')
 
-
-
-class TestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Booking
-        fields = ('id', 'total_amount', 'quantity', 'details', 'show')

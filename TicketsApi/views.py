@@ -1,12 +1,15 @@
-
-from rest_framework import generics, status
-from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
-from .serializers import MovieSerializer, TestSerializer,CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
-from rest_framework.views import APIView
-from django.http import Http404
-from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
+from .serializers import MovieSerializer, BookingDetailSerializer, CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
+from django.http import Http404
+from rest_framework.views import APIView
+from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
+from rest_framework import generics, status
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 # from rest_framework_simplejwt.views import TokenObtainPairView
 # from TicketsApi.serializers import MyTokenObtainPairSerializer
 
@@ -73,7 +76,7 @@ class ShowTimeListView(APIView):
 
     def post(self, request, format=None):
         recieved_data = JSONParser().parse(request)
-        cinema = Cinema .objects.get(id=recieved_data['cinema_id'])
+        cinema = Cinema.objects.get(id=recieved_data['cinema_id'])
         if recieved_data['total_seats'] > cinema.capacity:
             return Response("Select the lower no of seats", status=status.HTTP_409_CONFLICT)
         serializer = ShowTimeSerializer(data=recieved_data)
@@ -146,12 +149,13 @@ class BookingTicketsQuery(APIView):
             queryset = Booking.objects.get(id=booking_id)
         else:
             return Response("invalid", status=status.HTTP_409_CONFLICT)
-        seriliazer = BookingSerializer(queryset)
+        seriliazer = BookingDetailSerializer(queryset)
         return Response(seriliazer.data)
 
     def post(self, request, format=None):
         recieve_data = JSONParser().parse(request)
         showtime = ShowTime.objects.get(id=recieve_data['show'])
+        # print(showtime)
 
         if recieve_data['quantity'] > (showtime.total_seats - showtime.booked_seats):
             return Response("Error: No seats available", status=status.HTTP_409_CONFLICT)
@@ -161,9 +165,8 @@ class BookingTicketsQuery(APIView):
         showtime.booked_seats += recieve_data['quantity']
         showtime.save()
 
-        serializer = TestSerializer(data=recieve_data)
+        serializer = BookingSerializer(data=recieve_data)
         if serializer.is_valid():
-            booking_obj = serializer.save()
-            # serializer.save()
-            return Response(BookingSerializer.booking_obj.data, status=status.HTTP_201_CREATED)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
