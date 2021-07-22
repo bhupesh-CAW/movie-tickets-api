@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
-# from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class MovieSerializer(serializers.ModelSerializer):
@@ -46,8 +45,6 @@ class CinemaShowsSerializer(serializers.ModelSerializer):
                   'cinema_city', 'showtimes')
 
 
-
-
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
@@ -58,8 +55,6 @@ class BookingDetailSerializer(serializers.ModelSerializer):
     show = ShowMovieSerializer()
     details = PersonalDetailsSerializer()
 
-
     class Meta:
         model = Booking
         fields = ('id', 'total_amount', 'quantity', 'details', 'show')
-

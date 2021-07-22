@@ -5,7 +5,7 @@ urlpatterns = [
 
     path('movies/', MovieListView.as_view()),
     path('cinema/', CinemaListView.as_view()),
-    path('showTime/', ShowTimeListView.as_view()),
+    path('showtimes/', ShowTimeListView.as_view()),
     path('user-details/', PersonalDetailsView.as_view()),
     path('getshows/', GetShowsWithCityQuery.as_view()),
     path('getcinemas/', GetCinemasQuery.as_view()),

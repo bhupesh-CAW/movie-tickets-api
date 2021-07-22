@@ -1,18 +1,14 @@
-from .serializers import MovieSerializer, BookingDetailSerializer, CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
-from rest_framework.permissions import IsAuthenticated
+# django defined
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from django.http import Http404
 from rest_framework.views import APIView
-from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
 from rest_framework import generics, status
-import logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
-# from rest_framework_simplejwt.views import TokenObtainPairView
-# from TicketsApi.serializers import MyTokenObtainPairSerializer
-
+# user-defined
+from .models import Movie, Cinema, ShowTime, PersonalDetails, Booking
+from .serializers import MovieSerializer, BookingDetailSerializer, CinemaSerializer, ShowTimeSerializer, PersonalDetailsSerializer, BookingSerializer, ShowMovieSerializer, CinemaShowsSerializer
 # Create your views here.
 
 
@@ -30,12 +26,14 @@ class MovieListView(APIView):
         return Response(serializer.data, )
 
     def post(self, request, format=None):
-        data = JSONParser().parse(request)
-        serializer = MovieSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_superuser:
+            data = JSONParser().parse(request)
+            serializer = MovieSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response("Error: You are not allowed to post here", status=status.HTTP_401_UNAUTHORIZED)
 
 
 class CinemaListView(APIView):
@@ -51,12 +49,34 @@ class CinemaListView(APIView):
         return Response(serializer.data, )
 
     def post(self, request, format=None):
-        data = JSONParser().parse(request)
-        serializer = CinemaSerializer(data=data)
+        if request.user.is_superuser:
+            data = JSONParser().parse(request)
+            serializer = CinemaSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        return Response("Error: You are not allowed to post here", status=status.HTTP_401_UNAUTHORIZED)
+
+
+class PersonalDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        details = PersonalDetails.objects.all()
+        details_param = request.query_params.get('name', None)
+        if details_param is not None:
+            details = details.object.get(name=details_param)
+        serializer = PersonalDetailsSerializer(details, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        recieved_data = JSONParser().parse(request)
+        serializer = PersonalDetailsSerializer(data=recieved_data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ShowTimeListView(APIView):
@@ -86,28 +106,7 @@ class ShowTimeListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PersonalDetailsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, format=None):
-        details = PersonalDetails.objects.all()
-        details_param = request.query_params.get('name', None)
-        if details_param is not None:
-            details = details.object.get(name=details_param)
-        serializer = PersonalDetailsSerializer(details, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        recieved_data = JSONParser().parse(request)
-        serializer = PersonalDetailsSerializer(data=recieved_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# Class BookingView(APIView)
-
-
+# From here on we have written different queries
 class GetShowsWithCityQuery(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -155,7 +154,6 @@ class BookingTicketsQuery(APIView):
     def post(self, request, format=None):
         recieve_data = JSONParser().parse(request)
         showtime = ShowTime.objects.get(id=recieve_data['show'])
-        # print(showtime)
 
         if recieve_data['quantity'] > (showtime.total_seats - showtime.booked_seats):
             return Response("Error: No seats available", status=status.HTTP_409_CONFLICT)
